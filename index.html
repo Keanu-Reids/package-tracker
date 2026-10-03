@@ -136,8 +136,19 @@
 
     .list {
       display: grid;
-      gap: 12px;
+      gap: 24px;
       margin-top: 24px;
+    }
+
+    .carrier-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .carrier-heading {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
     }
 
     .card {
@@ -357,46 +368,71 @@
         return;
       }
 
+      const groups = {
+        FedEx: [],
+        UPS: [],
+        USPS: [],
+        Other: []
+      };
       packages.forEach((pkg) => {
-        const card = document.createElement("article");
-        card.className = "card";
+        const group = Object.prototype.hasOwnProperty.call(groups, pkg.carrier)
+          ? pkg.carrier
+          : "Other";
+        groups[group].push(pkg);
+      });
 
-        const body = document.createElement("div");
-        const title = document.createElement("h2");
-        title.textContent = pkg.nickname || pkg.trackingNumber;
-        const meta = document.createElement("p");
-        meta.className = "meta";
-        const carrier = document.createElement("strong");
-        carrier.textContent = pkg.carrier || "Unknown carrier";
-        const detail = pkg.nickname ? " · " + pkg.trackingNumber : "";
-        const status = pkg.status || "Not checked yet";
-        const delivery = pkg.delivery ? " · Delivery: " + pkg.delivery : "";
-        meta.append(carrier, document.createTextNode(detail + " · Status: " + status + delivery));
-        body.append(title, meta);
+      Object.entries(groups).forEach(([carrierName, groupPackages]) => {
+        if (groupPackages.length === 0) return;
 
-        const actions = document.createElement("div");
-        actions.className = "actions";
-        if (TRACK_URL[pkg.carrier]) {
-          const link = document.createElement("a");
-          link.href = TRACK_URL[pkg.carrier](pkg.trackingNumber);
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.textContent = "Track on " + pkg.carrier;
-          actions.appendChild(link);
-        }
-        if (pkg.source === "local") {
-          const remove = document.createElement("button");
-          remove.type = "button";
-          remove.className = "remove";
-          remove.textContent = "Remove";
-          remove.addEventListener("click", () => {
-            save(loadLocal().filter((item) => item.id !== pkg.id));
-            render();
-          });
-          actions.appendChild(remove);
-        }
-        card.append(body, actions);
-        list.appendChild(card);
+        const group = document.createElement("section");
+        group.className = "carrier-group";
+        const heading = document.createElement("h2");
+        heading.className = "carrier-heading";
+        heading.textContent = carrierName + " (" + groupPackages.length + ")";
+        group.appendChild(heading);
+
+        groupPackages.forEach((pkg) => {
+          const card = document.createElement("article");
+          card.className = "card";
+
+          const body = document.createElement("div");
+          const title = document.createElement("h2");
+          title.textContent = pkg.nickname || pkg.trackingNumber;
+          const meta = document.createElement("p");
+          meta.className = "meta";
+          const carrier = document.createElement("strong");
+          carrier.textContent = pkg.carrier || "Unknown carrier";
+          const detail = pkg.nickname ? " · " + pkg.trackingNumber : "";
+          const status = pkg.status || "Not checked yet";
+          const delivery = pkg.delivery ? " · Delivery: " + pkg.delivery : "";
+          meta.append(carrier, document.createTextNode(detail + " · Status: " + status + delivery));
+          body.append(title, meta);
+
+          const actions = document.createElement("div");
+          actions.className = "actions";
+          if (TRACK_URL[pkg.carrier]) {
+            const link = document.createElement("a");
+            link.href = TRACK_URL[pkg.carrier](pkg.trackingNumber);
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Track on " + pkg.carrier;
+            actions.appendChild(link);
+          }
+          if (pkg.source === "local") {
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "remove";
+            remove.textContent = "Remove";
+            remove.addEventListener("click", () => {
+              save(loadLocal().filter((item) => item.id !== pkg.id));
+              render();
+            });
+            actions.appendChild(remove);
+          }
+          card.append(body, actions);
+          group.appendChild(card);
+        });
+        list.appendChild(group);
       });
     }
 
