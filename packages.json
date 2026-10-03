@@ -47,5 +47,12 @@
     "nickname": "",
     "status": "In FedEx possession",
     "delivery": "Delivery date not set yet"
+  },
+  {
+    "trackingNumber": "541231331624",
+    "carrier": "FedEx",
+    "nickname": "",
+    "status": "Delivery updated",
+    "delivery": "Will be updated soon"
   }
 ]
