@@ -255,11 +255,33 @@
     const hint = document.getElementById("hint");
     const list = document.getElementById("list");
 
-    function load() {
+    let sharedPackages = [];
+
+    function normalizePackage(pkg, source) {
+      if (!pkg || typeof pkg !== "object") return null;
+      const trackingNumber = String(pkg.trackingNumber || pkg.tracking || "")
+        .trim()
+        .replace(/\s+/g, "");
+      if (!trackingNumber) return null;
+
+      return {
+        id: pkg.id || (source === "shared" ? "shared:" + trackingNumber.toUpperCase() : ""),
+        trackingNumber: trackingNumber,
+        nickname: String(pkg.nickname || ""),
+        carrier: String(pkg.carrier || ""),
+        status: String(pkg.status || "Not checked yet"),
+        delivery: String(pkg.delivery || ""),
+        source: source
+      };
+    }
+
+    function loadLocal() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const data = raw ? JSON.parse(raw) : [];
-        return Array.isArray(data) ? data : [];
+        return Array.isArray(data)
+          ? data.map((pkg) => normalizePackage(pkg, "local")).filter(Boolean)
+          : [];
       } catch (e) {
         return [];
       }
@@ -267,6 +289,33 @@
 
     function save(packages) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
+    }
+
+    function allPackages() {
+      const packages = [];
+      const seen = new Set();
+      [...sharedPackages, ...loadLocal()].forEach((pkg) => {
+        const key = pkg.trackingNumber.toUpperCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          packages.push(pkg);
+        }
+      });
+      return packages;
+    }
+
+    async function loadShared() {
+      try {
+        const response = await fetch("./packages.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("Unable to load shared packages");
+        const data = await response.json();
+        sharedPackages = Array.isArray(data)
+          ? data.map((pkg) => normalizePackage(pkg, "shared")).filter(Boolean)
+          : [];
+      } catch (e) {
+        sharedPackages = [];
+      }
+      render();
     }
 
     function detectCarrier(raw) {
@@ -290,7 +339,7 @@
     }
 
     function render() {
-      const packages = load();
+      const packages = allPackages();
       list.innerHTML = "";
 
       if (packages.length === 0) {
@@ -307,31 +356,38 @@
 
         const body = document.createElement("div");
         const title = document.createElement("h2");
-        title.textContent = pkg.nickname || pkg.tracking;
+        title.textContent = pkg.nickname || pkg.trackingNumber;
         const meta = document.createElement("p");
         meta.className = "meta";
         const carrier = document.createElement("strong");
-        carrier.textContent = pkg.carrier;
-        const detail = pkg.nickname ? " · " + pkg.tracking : "";
-        meta.append(carrier, document.createTextNode(detail + " · Status: Not checked yet"));
+        carrier.textContent = pkg.carrier || "Unknown carrier";
+        const detail = pkg.nickname ? " · " + pkg.trackingNumber : "";
+        const status = pkg.status || "Not checked yet";
+        const delivery = pkg.delivery ? " · Delivery: " + pkg.delivery : "";
+        meta.append(carrier, document.createTextNode(detail + " · Status: " + status + delivery));
         body.append(title, meta);
 
         const actions = document.createElement("div");
         actions.className = "actions";
-        const link = document.createElement("a");
-        link.href = TRACK_URL[pkg.carrier](pkg.tracking);
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "Track on " + pkg.carrier;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "remove";
-        remove.textContent = "Remove";
-        remove.addEventListener("click", () => {
-          save(load().filter((item) => item.id !== pkg.id));
-          render();
-        });
-        actions.append(link, remove);
+        if (TRACK_URL[pkg.carrier]) {
+          const link = document.createElement("a");
+          link.href = TRACK_URL[pkg.carrier](pkg.trackingNumber);
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Track on " + pkg.carrier;
+          actions.appendChild(link);
+        }
+        if (pkg.source === "local") {
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "remove";
+          remove.textContent = "Remove";
+          remove.addEventListener("click", () => {
+            save(loadLocal().filter((item) => item.id !== pkg.id));
+            render();
+          });
+          actions.appendChild(remove);
+        }
         card.append(body, actions);
         list.appendChild(card);
       });
@@ -373,18 +429,19 @@
         return;
       }
 
-      const packages = load();
-      if (packages.some((pkg) => pkg.tracking.toUpperCase() === tracking.toUpperCase())) {
+      const packages = loadLocal();
+      if (allPackages().some((pkg) => pkg.trackingNumber.toUpperCase() === tracking.toUpperCase())) {
         hint.textContent = "That tracking number is already saved.";
         return;
       }
 
       packages.unshift({
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        tracking: tracking,
+        trackingNumber: tracking,
         nickname: nickname,
         carrier: carrier,
-        status: "Not checked yet"
+        status: "Not checked yet",
+        delivery: ""
       });
       save(packages);
       form.reset();
@@ -394,6 +451,7 @@
     });
 
     render();
+    loadShared();
   </script>
 
   <script>
