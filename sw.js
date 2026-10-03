@@ -1,4 +1,4 @@
-const CACHE = "package-tracker-v1";
+const CACHE = "package-tracker-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -37,7 +37,7 @@ async function networkFirst(request) {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.pathname.endsWith("/packages.json")) {
+  if (["/index.html", "/sw.js", "/packages.json"].some((path) => url.pathname.endsWith(path))) {
     event.respondWith(networkFirst(event.request));
     return;
   }

@@ -255,6 +255,7 @@
     const hint = document.getElementById("hint");
     const list = document.getElementById("list");
 
+    const SHARED_PACKAGES_URL = "https://raw.githubusercontent.com/Keanu-Reids/package-tracker/main/packages.json";
     let sharedPackages = [];
 
     function normalizePackage(pkg, source) {
@@ -306,8 +307,14 @@
 
     async function loadShared() {
       try {
-        const response = await fetch("./packages.json", { cache: "no-store" });
-        if (!response.ok) throw new Error("Unable to load shared packages");
+        let response;
+        try {
+          response = await fetch(SHARED_PACKAGES_URL, { cache: 'no-store' });
+          if (!response.ok) throw new Error("Unable to load remote shared packages");
+        } catch (e) {
+          response = await fetch("./packages.json", { cache: 'no-store' });
+          if (!response.ok) throw new Error("Unable to load local shared packages");
+        }
         const data = await response.json();
         sharedPackages = Array.isArray(data)
           ? data.map((pkg) => normalizePackage(pkg, "shared")).filter(Boolean)
