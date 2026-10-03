@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Package Tracker</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1c1917;
+      --muted: #57534e;
+      --line: #e7e5e4;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --soft: #f5f5f4;
+      --danger: #9f1239;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 880px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      min-height: 68px;
+      margin: 0 -24px 36px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .top-bar h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+
+    .intro {
+      margin-bottom: 28px;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      font: inherit;
+      color: inherit;
+    }
+
+    input, select {
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid #d6d3d1;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+
+    button {
+      height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--accent-dark); }
+
+    .carrier-row {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--soft);
+      border-radius: 8px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .carrier-row.visible { display: flex; }
+
+    .carrier-row span { color: var(--muted); font-size: 0.92rem; }
+
+    .hint {
+      min-height: 1.25em;
+      margin: 10px 0 0;
+      font-size: 0.85rem;
+      color: var(--danger);
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 16px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 650;
+      word-break: break-all;
+    }
+
+    .meta {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .meta strong { color: var(--text); font-weight: 600; }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .actions a {
+      color: var(--accent-dark);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .actions a:hover { text-decoration: underline; }
+
+    .remove {
+      height: auto;
+      padding: 0;
+      background: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .remove:hover { color: var(--danger); background: none; }
+
+    .empty {
+      margin-top: 28px;
+      padding: 28px 8px;
+      color: var(--muted);
+    }
+
+    .empty strong { color: var(--text); }
+
+    @media (max-width: 720px) {
+      form, .card { grid-template-columns: 1fr; }
+      .actions { align-items: flex-start; flex-direction: row; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top-bar">
+      <h1>Package Tracker</h1>
+    </header>
+
+    <div class="intro">
+      <p>FedEx, UPS, and USPS in one place.</p>
+    </div>
+
+    <form id="add-form" autocomplete="off">
+      <div class="field">
+        <label for="tracking">Tracking number</label>
+        <input id="tracking" name="tracking" required maxlength="40" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="nickname">Nickname (optional)</label>
+        <input id="nickname" name="nickname" maxlength="80">
+      </div>
+      <button type="submit">Add package</button>
+    </form>
+
+    <div id="carrier-row" class="carrier-row">
+      <span>Carrier isn’t clear. Choose one:</span>
+      <select id="carrier-pick" aria-label="Carrier">
+        <option value="FedEx">FedEx</option>
+        <option value="UPS">UPS</option>
+        <option value="USPS">USPS</option>
+      </select>
+    </div>
+    <p id="hint" class="hint" role="status"></p>
+
+    <div id="list" class="list"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "package-tracker.packages.v1";
+    const TRACK_URL = {
+      FedEx: (n) => "https://www.fedex.com/fedextrack/?trknbr=" + encodeURIComponent(n),
+      UPS: (n) => "https://www.ups.com/track?loc=en_US&tracknum=" + encodeURIComponent(n) + "&requester=ST/",
+      USPS: (n) => "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + encodeURIComponent(n)
+    };
+
+    const form = document.getElementById("add-form");
+    const trackingInput = document.getElementById("tracking");
+    const nicknameInput = document.getElementById("nickname");
+    const carrierRow = document.getElementById("carrier-row");
+    const carrierPick = document.getElementById("carrier-pick");
+    const hint = document.getElementById("hint");
+    const list = document.getElementById("list");
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const data = raw ? JSON.parse(raw) : [];
+        return Array.isArray(data) ? data : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function save(packages) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
+    }
+
+    function detectCarrier(raw) {
+      const value = String(raw || "").trim().replace(/\s+/g, "");
+      const upper = value.toUpperCase();
+      const digitsOnly = /^\d+$/.test(value);
+
+      if (upper.startsWith("1Z")) return "UPS";
+
+      const intlUsps = /^[A-Z]{2}\d{9}US$/i.test(upper) || (upper.length === 13 && upper.endsWith("US"));
+      const twentyToTwentyTwo = digitsOnly && value.length >= 20 && value.length <= 22;
+      const prefixedLong = /^(94|93|92|91)/.test(value) && value.length >= 18 && /^[0-9A-Z]+$/i.test(value);
+
+      if (intlUsps || twentyToTwentyTwo || prefixedLong) return "USPS";
+
+      if (digitsOnly && (value.length === 12 || value.length === 15 || value.length === 22)) {
+        return "FedEx";
+      }
+
+      return null;
+    }
+
+    function render() {
+      const packages = load();
+      list.innerHTML = "";
+
+      if (packages.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.innerHTML = "<strong>No packages yet.</strong> Add a tracking number above. UPS account shipping history since Sep 26, 2026 was empty.";
+        list.appendChild(empty);
+        return;
+      }
+
+      packages.forEach((pkg) => {
+        const card = document.createElement("article");
+        card.className = "card";
+
+        const body = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = pkg.nickname || pkg.tracking;
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        const carrier = document.createElement("strong");
+        carrier.textContent = pkg.carrier;
+        const detail = pkg.nickname ? " · " + pkg.tracking : "";
+        meta.append(carrier, document.createTextNode(detail + " · Status: Not checked yet"));
+        body.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const link = document.createElement("a");
+        link.href = TRACK_URL[pkg.carrier](pkg.tracking);
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Track on " + pkg.carrier;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove";
+        remove.textContent = "Remove";
+        remove.addEventListener("click", () => {
+          save(load().filter((item) => item.id !== pkg.id));
+          render();
+        });
+        actions.append(link, remove);
+        card.append(body, actions);
+        list.appendChild(card);
+      });
+    }
+
+    function showCarrierPicker(show) {
+      carrierRow.classList.toggle("visible", show);
+    }
+
+    trackingInput.addEventListener("input", () => {
+      hint.textContent = "";
+      const detected = detectCarrier(trackingInput.value);
+      showCarrierPicker(trackingInput.value.trim() !== "" && !detected);
+      if (detected) carrierPick.value = detected;
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const tracking = trackingInput.value.trim().replace(/\s+/g, "");
+      const nickname = nicknameInput.value.trim();
+      if (!tracking) {
+        hint.textContent = "Enter a tracking number.";
+        return;
+      }
+
+      const detected = detectCarrier(tracking);
+      const needsPick = !detected;
+      const carrier = detected || (carrierRow.classList.contains("visible") ? carrierPick.value : null);
+
+      if (!carrier || !TRACK_URL[carrier]) {
+        showCarrierPicker(true);
+        hint.textContent = "Pick FedEx, UPS, or USPS for this number.";
+        return;
+      }
+
+      if (needsPick && !carrierRow.classList.contains("visible")) {
+        showCarrierPicker(true);
+        hint.textContent = "Pick FedEx, UPS, or USPS for this number.";
+        return;
+      }
+
+      const packages = load();
+      if (packages.some((pkg) => pkg.tracking.toUpperCase() === tracking.toUpperCase())) {
+        hint.textContent = "That tracking number is already saved.";
+        return;
+      }
+
+      packages.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        tracking: tracking,
+        nickname: nickname,
+        carrier: carrier,
+        status: "Not checked yet"
+      });
+      save(packages);
+      form.reset();
+      showCarrierPicker(false);
+      hint.textContent = "";
+      render();
+    });
+
+    render();
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
+  <title id="title">Package Tracker</title>
+  <rect width="192" height="192" rx="36" fill="#fff"/>
+  <path d="M40 67 96 38l56 29v58l-56 29-56-29V67Z" fill="#0f766e"/>
+  <path d="m40 67 56 30 56-30M96 97v57M68 53l56 29" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+</svg>
