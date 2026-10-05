@@ -54,5 +54,12 @@
     "nickname": "",
     "status": "Delivery updated",
     "delivery": "Will be updated soon"
+  },
+  {
+    "trackingNumber": "1ZR043180338727403",
+    "carrier": "UPS",
+    "nickname": "",
+    "status": "Delivered",
+    "delivery": "Sep 29, 2026, 5:42 PM"
   }
 ]
